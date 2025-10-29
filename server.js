@@ -1,4 +1,4 @@
-// ✅ server.js — FINAL WORKING VERSION (with fallback data insert option)
+// ✅ server.js — FINAL FIXED VERSION (CORS enabled for Vercel frontend)
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -8,7 +8,19 @@ const axios = require("axios");
 const District = require("./District");
 
 const app = express();
-app.use(cors());
+
+// ✅ CORS CONFIG — allow frontend (vercel) + local dev
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000", // local dev
+      "https://mgnrega-frontend-app.vercel.app", // vercel frontend
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // ✅ MongoDB Connection
@@ -119,10 +131,7 @@ app.get("/api/districts", async (req, res) => {
 app.get("/api/districts/:name", async (req, res) => {
   try {
     const districtName = req.params.name;
-
-    // Properly escape regex characters
     const escapedName = districtName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
     const districtData = await District.findOne({
       district: { $regex: new RegExp(`^${escapedName}$`, "i") },
     });
